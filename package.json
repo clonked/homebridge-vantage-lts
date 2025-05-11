@@ -18,15 +18,15 @@
     "url": "https://github.com/clonked/homebridge-vantage-lts.git"
   },
   "dependencies": {
-    "net": "latest",
-    "sprintf-js": "latest",
-    "xml2json": "latest",
-    "libxmljs": "latest",
-    "wait-until": "latest",
-    "promise": "latest",
     "debug": "latest",
     "inherits": "latest",
-    "sleep": "latest"
+    "libxmljs": "latest",
+    "net": "latest",
+    "promise": "latest",
+    "sleep": "latest",
+    "sprintf-js": "latest",
+    "wait-until": "latest",
+    "xml2json": "latest"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -35,9 +35,12 @@
     "prepublishOnly": "npm run lint && npm run build",
     "watch": "npm run build && npm link && nodemon"
   },
-   "devDependencies": {
+  "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.5",
+    "@types/sleep": "^6.3.0",
+    "@types/sprintf-js": "^1.1.4",
+    "@types/xml2json": "^0.11.6",
     "eslint": "^9.21.0",
     "homebridge": "^2.0.0-beta.0",
     "nodemon": "^3.1.9",

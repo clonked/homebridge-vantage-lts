@@ -11,6 +11,7 @@ import * as util from 'util';
 import * as fs from 'fs';
 
 import * as settings from './settings';
+import { constants } from 'buffer';
 
 let Accessory : any, Characteristic : any, Service : any, UUIDGen : any;
 
@@ -78,8 +79,7 @@ class VantageInfusion extends events.EventEmitter {
 						console.log(sprintf.sprintf('thermostatDidChange'), parseInt(dataItem[2]), 0);
 						// this.emit(sprintf("thermostatIndoorTemperatureChange"), parseInt(dataItem[2]));
 					}
-					else if (dataItem[0] === 'R:INVOKE' && dataItem[3].includes('Thermostat.GetIndoorTemperature')) 
-						{
+					else if (dataItem[0] === 'R:INVOKE' && dataItem[3].includes('Thermostat.GetIndoorTemperature')) {
 						//console.log("lets get the indoor temp!")
 						console.log(sprintf.sprintf('thermostatIndoorTemperatureChange'), parseInt(dataItem[1]), parseFloat(dataItem[2]));
 					}
@@ -147,7 +147,7 @@ class VantageInfusion extends events.EventEmitter {
 			return new Promise((resolve) => {
 				this.once(sprintf.sprintf('isInterfaceSupportedAnswer-%d-%d', parseInt(item.VID), parseInt(interfaceId)), (_support) => {
 					resolve({ 'item': item, 'interface': interfaceName, 'support': _support });
-				},
+				}
 				);
 				sleep.usleep(5000);
 				this.command.write(sprintf.sprintf('INVOKE %s Object.IsInterfaceSupported %s\n', item.VID, interfaceId));
@@ -407,7 +407,7 @@ class VantagePlatform {
 	api: any;
 	ipaddress: any;
 	lastDiscovery: null;
-	items: VantageThermostat[];
+	items: any[];
 	omit: string;
 	range: string;
 	username: string;
@@ -455,16 +455,17 @@ class VantagePlatform {
 		this.infusion.Discover();
 		this.pendingrequests = 0;
 		this.ready = false;
-		this.callbackPromesedAccessories = undefined;
+
 		this.getAccessoryCallback = null;
 
 		this.log.info('VantagePlatform for InFusion Controller at ' + this.ipaddress);
 
 		this.infusion.on('loadStatusChange', (vid: any, value: string) => {
-			this.items.forEach(function (accessory: { address: any; type: string; name: any; bri: number; power: boolean; switchService: { getCharacteristic: (arg0: any) => { (): any; new(): any; getValue: { (arg0: null, arg1: any): void; new(): any; }; }; } | undefined; lightBulbService: { getCharacteristic: (arg0: any) => { (): any; new(): any; getValue: { (arg0: null, arg1: any): void; new(): any; }; }; } | undefined; }) {
-				if (accessory.address === vid) {
+			//this.items.forEach(function (accessory: { address: any; type: string; name: any; bri: number; power: boolean; switchService: { getCharacteristic: (arg0: any) => { (): any; new(): any; getValue: { (arg0: null, arg1: any): void; new(): any; }; }; } | undefined; lightBulbService: { getCharacteristic: (arg0: any) => { (): any; new(): any; getValue: { (arg0: null, arg1: any): void; new(): any; }; }; } | undefined; }) {
+			this.items.forEach(function(accessory : any) {
+			if (accessory.address === vid) {
 					if (accessory.type === 'relay') {
-						this.log(sprintf.sprintf('relayStatusChange (VID=%s, Name=%s, Val:%d)', vid, accessory.name, value));
+						console.log(sprintf.sprintf('relayStatusChange (VID=%s, Name=%s, Val:%d)', vid, accessory.name, value));
 						accessory.bri = parseInt(value);
 						accessory.power = ((accessory.bri) > 0);
 						//console.log(accessory);
@@ -474,7 +475,7 @@ class VantagePlatform {
 						}
 					}
 					else {
-						this.log(sprintf.sprintf('loadStatusChange (VID=%s, Name=%s, Bri:%d)', vid, accessory.name, value));
+						console.log(sprintf.sprintf('loadStatusChange (VID=%s, Name=%s, Bri:%d)', vid, accessory.name, value));
 						accessory.bri = parseInt(value);
 						accessory.power = ((accessory.bri) > 0);
 						//console.log(accessory);
@@ -491,9 +492,10 @@ class VantagePlatform {
 		});
 
 		this.infusion.on('blindStatusChange', (vid: any, value: string) => {
-			this.items.forEach(function (accessory: { address: any; name: any; pos: number; blindService: { getCharacteristic: (arg0: any) => { (): any; new(): any; getValue: { (arg0: null, arg1: any): void; new(): any; }; }; } | undefined; }) {
-				if (accessory.address == vid) {
-					this.log(sprintf.sprintf("blindStatusChange (VID=%s, Name=%s, Pos:%d)", vid, accessory.name, value));
+			//this.items.forEach(function (accessory: { address: any; name: any; pos: number; blindService: { getCharacteristic: (arg0: any) => { (): any; new(): any; getValue: { (arg0: null, arg1: any): void; new(): any; }; }; } | undefined; }) {
+			this.items.forEach(function(accessory : any) {
+			if (accessory.address == vid) {
+					console.log(sprintf.sprintf("blindStatusChange (VID=%s, Name=%s, Pos:%d)", vid, accessory.name, value));
 					accessory.pos = parseInt(value);
 					if (accessory.blindService !== undefined) {
 						/* Is it ready? */
@@ -547,17 +549,18 @@ class VantagePlatform {
 		});
 
 		this.infusion.on('thermostatDidChange', (value: any) => {
-			this.items.forEach(function (accessory: { type: string; thermostatService: undefined; address: any; }) {
+			let $this = this;
+			$this.items.forEach(function (accessory: { type: string; thermostatService: undefined; address: any; }) {
 				//console.log(accessory)
-				if (accessory.type == "thermostat") {
+				if (accessory.type == 'thermostat') {
 					//console.log(accessory)
 					if (accessory.thermostatService !== undefined) {
 						/* Is it ready? */
 						//console.log(accessory.thermostatService);
-						this.infusion.Thermostat_GetIndoorTemperature(accessory.address);
-						this.infusion.Thermostat_GetState(accessory.address);
-						this.infusion.Thermostat_GetHeating(accessory.address);
-						this.infusion.Thermostat_GetCooling(accessory.address);
+						$this.infusion.Thermostat_GetIndoorTemperature(accessory.address);
+						$this.infusion.Thermostat_GetState(accessory.address);
+						$this.infusion.Thermostat_GetHeating(accessory.address);
+						$this.infusion.Thermostat_GetCooling(accessory.address);
 					}
 				}
 			}.bind(this));
@@ -593,7 +596,7 @@ class VantagePlatform {
 				const item = Areas[i].Area;
 				Area[item.VID] = item;
 			}
-			const blindItems = {};
+			const blindItems: { [key: string]: any } = {};
 			let range = this.range;
 			let rangeArray = [];
 			let omitArray: string | any[] = [];
@@ -677,47 +680,52 @@ class VantagePlatform {
 						if (thisItem.LoadType === 'Fluor. Mag non-Dim' || thisItem.LoadType === 'LED non-Dim' || thisItem.LoadType === 'Fluor. Electronic non-Dim' || thisItem.LoadType === 'Low Voltage Relay' || thisItem.LoadType === 'Motor' || thisItem.DeviceCategory === 'Lighting' || thisItem.LoadType === 'High Voltage Relay') {
 							if (thisItem.LoadType === 'Low Voltage Relay' || thisItem.LoadType === 'High Voltage Relay') {
 								this.log(sprintf.sprintf('New relay added (VID=%s, Name=%s, RELAY)', thisItem.VID, thisItem.Name));
-								this.items.push(new VantageSwitch(this.log, this, name, thisItem.VID, relay'));
-							}
-							else {
-								this.log(sprintf("New load added (VID=%s, Name=%s, NON-DIMMER)", thisItem.VID, thisItem.Name));
-								this.items.push(new VantageLoad(this.log, this, name, thisItem.VID, "non-dimmer"));
+								this.items.push(new VantageSwitch(this.log, this, name, thisItem.VID, 'relay'));
+							} else {
+								this.log(sprintf.sprintf('New load added (VID=%s, Name=%s, NON-DIMMER)', thisItem.VID, thisItem.Name));
+								this.items.push(new VantageLoad(this.log, this, name, thisItem.VID, 'non-dimmer'));
 							}
 						} else {
-							this.log(sprintf("New load added (VID=%s, Name=%s, DIMMER)", thisItem.VID, thisItem.Name));
-							this.items.push(new VantageLoad(this.log, this, name, thisItem.VID, "dimmer"));
+							this.log(sprintf.sprintf('New load added (VID=%s, Name=%s, DIMMER)', thisItem.VID, thisItem.Name));
+							this.items.push(new VantageLoad(this.log, this, name, thisItem.VID, 'dimmer'));
 						}
 						this.pendingrequests = this.pendingrequests - 1;
 						this.callbackPromesedAccessoriesDo();
 					}
-					if (thisItem.ObjectType == "Blind" || thisItem.ObjectType == "RelayBlind" || thisItem.ObjectType == "Lutron.Shade_x2F_Blind_Child_CHILD" || thisItem.ObjectType == "QubeBlind") {
+					if (thisItem.ObjectType === 'Blind' || thisItem.ObjectType === 'RelayBlind' || thisItem.ObjectType === 'Lutron.Shade_x2F_Blind_Child_CHILD' || thisItem.ObjectType === 'QubeBlind') {
 						//this.log.warn(sprintf("New light asked (VID=%s, Name=%s, ---)", thisItem.VID, thisItem.Name));
-						if (thisItem.DName !== undefined && thisItem.DName != "" && (typeof thisItem.DName === 'string')) thisItem.Name = thisItem.DName;
+						if (thisItem.DName !== undefined && thisItem.DName !== '' && (typeof thisItem.DName === 'string')) {
+							thisItem.Name = thisItem.DName;
+						}
+
 						this.pendingrequests = this.pendingrequests + 1;
 						//added below
-						var name = thisItem.Name
-						name = name.toString()
-						if (thisItem.Area !== undefined && thisItem.Area != "") {
-							var areaVID = thisItem.Area
-							if (Area[areaVID] !== undefined && Area[areaVID].Name !== undefined && Area[areaVID].Name != "")
-								name = Area[areaVID].Name + " " + name
+						let name = thisItem.Name;
+						name = name.toString();
+						if (thisItem.Area !== undefined && thisItem.Area !== '') {
+							const areaVID = thisItem.Area;
+							if (Area[areaVID] !== undefined && Area[areaVID].Name !== undefined && Area[areaVID].Name !== '') {
+								name = Area[areaVID].Name + ' ' + name;
+							}
 						}
 						name = name.replace('-', '');
-						if (dict[name.toLowerCase()] === undefined && name != "")
-							dict[name.toLowerCase()] = name
-						else {
-							name = name + " VID" + thisItem.VID
-							dict[name.toLowerCase()] = name
+						if (dict[name.toLowerCase()] === undefined && name !== '') {
+							dict[name.toLowerCase()] = name;
 						}
-						if (thisItem.ObjectType == "RelayBlind") {
-							blindItems[thisItem.OpenLoad] = thisItem.OpenLoad
-							blindItems[thisItem.CloseLoad] = thisItem.CloseLoad
-							if (thisItem.PowerLoad != "0")
-								blindItems[thisItem.PowerLoad] = thisItem.PowerLoad
+						else {
+							name = name + ' VID' + thisItem.VID;
+							dict[name.toLowerCase()] = name;
+						}
+						if (thisItem.ObjectType === 'RelayBlind') {
+							blindItems[thisItem.OpenLoad] = thisItem.OpenLoad;
+							blindItems[thisItem.CloseLoad] = thisItem.CloseLoad;
+							if (thisItem.PowerLoad !== '0') {
+								blindItems[thisItem.PowerLoad] = thisItem.PowerLoad;
+							}
 						}
 						// var name = "VID" + thisItem.VID + " " + thisItem.Name
-						this.log(sprintf("New Blind added (VID=%s, Name=%s, BLIND)", thisItem.VID, thisItem.Name));
-						this.items.push(new VantageBlind(this.log, this, name, thisItem.VID, "blind"));
+						this.log(sprintf.sprintf('New Blind added (VID=%s, Name=%s, BLIND)', thisItem.VID, thisItem.Name));
+						this.items.push(new VantageBlind(this.log, this, name, thisItem.VID, 'blind'));
 						this.pendingrequests = this.pendingrequests - 1;
 						this.callbackPromesedAccessoriesDo();
 					}
@@ -729,7 +737,7 @@ class VantagePlatform {
 					i--;
 				}
 			}
-			this.log.warn("VantagePlatform for InFusion Controller (end configuration store)");
+			this.log.warn('VantagePlatform for InFusion Controller (end configuration store)');
 			this.ready = true;
 			this.callbackPromesedAccessoriesDo();
 			//console.log("done??");

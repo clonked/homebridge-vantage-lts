@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { API, Characteristic, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
+
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
+
 import * as net from 'net';
 import * as sprintf from 'sprintf-js';
 import Promise from 'promise';
@@ -8,24 +13,10 @@ import * as parser from 'xml2json';
 import * as libxmljs from 'libxmljs';
 import * as sleep from 'sleep';
 import * as events from 'events';
-import * as util from 'util';
 import * as fs from 'fs';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
+
 //import { DynamicPlatformPlugin } from 'homebridge/dist/api';
-
-let Accessory : any, Characteristic : any, Service : any, UUIDGen : any;
-
-module.exports = function (homebridge : any) {
-  	Service = homebridge.hap.Service;
-	Characteristic = homebridge.hap.Characteristic;
-	Accessory = homebridge.platformAccessory;
-	UUIDGen = homebridge.hap.uuid;
-
-	util.inherits(VantageLoad, Accessory);
-	process.setMaxListeners(0);
-	homebridge.registerPlatform(PLATFORM_NAME, PLUGIN_NAME, VantagePlatform);
-};
 
 export class VantageInfusion extends events.EventEmitter { // implements DynamicPlatformPlugin {
 	ipaddress: any;
@@ -402,7 +393,7 @@ export class VantageInfusion extends events.EventEmitter { // implements Dynamic
 }
 
 
-export class VantagePlatform {
+export class VantagePlatform implements DynamicPlatformPlugin {
 	log: any;
 	config: { ipaddress?: any; omit?: any; range?: any; username?: any; password?: any; };
 	api: any;
@@ -744,6 +735,10 @@ export class VantagePlatform {
 			//console.log("done??");
 		});
 	}
+	configureAccessory(accessory: PlatformAccessory): void {
+		this.log.info(`Configuring accessory: ${accessory.displayName}`);
+		this.items.push(accessory);
+	}
 
 	/**
 	 * Called once, returns the list of accessories only
@@ -901,7 +896,7 @@ class VantageThermostat {
 
 }
 
-class VantageLoad {
+class VantageLoad extends VantageAccessory {
 	displayName: any;
 	UUID: any;
 	name: any;
@@ -915,6 +910,7 @@ class VantageLoad {
 	type: string;
 	lightBulbService: any;
 	constructor(log: any, parent: any, name: any, vid: any, type: string) {
+		super();
 		this.displayName = name;
 		this.UUID = UUIDGen.generate(vid);
 		this.name = name;

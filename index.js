@@ -1,12 +1,7 @@
 var net = require('net');
 var sprintf = require("sprintf-js").sprintf;
-var inherits = require("util").inherits;
-var Promise = require('promise');
-var parser = require('xml2json');
-var libxmljs = require("libxmljs");
-var sleep = require('sleep');
+var { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 var events = require('events');
-var util = require('util');
 var fs = require('fs');
 var Accessory, Characteristic, Service, UUIDGen;
 
@@ -16,14 +11,24 @@ module.exports = function (homebridge) {
 	Accessory = homebridge.platformAccessory;
 	UUIDGen = homebridge.hap.uuid;
 
-	inherits(VantageLoad, Accessory);
 	process.setMaxListeners(0);
 	homebridge.registerPlatform("homebridge-vantage", "VantageControls", VantagePlatform);
 };
 
+var xmlParser = new XMLParser({
+	ignoreAttributes: false,
+	attributeNamePrefix: '',
+	parseTagValue: false,
+	isArray: (name) => {
+		// Reason: xml2json returned arrays for these; fast-xml-parser needs explicit hints
+		return ['Interface', 'Object'].includes(name);
+	}
+});
+var xmlBuilder = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: '', suppressBooleanAttributes: false });
+
 class VantageInfusion {
 	constructor(ipaddress, accessories, usecache, omit, range, username, password) {
-		util.inherits(VantageInfusion, events.EventEmitter);
+		require("util").inherits(VantageInfusion, events.EventEmitter);
 		this.ipaddress = ipaddress;
 		this.usecache = usecache || true;
 		this.accessories = accessories || [];
@@ -127,8 +132,9 @@ class VantageInfusion {
 					resolve({ 'item': item, 'interface': interfaceName, 'support': _support });
 				}
 				);
-				sleep.usleep(5000);
-				this.command.write(sprintf("INVOKE %s Object.IsInterfaceSupported %s\n", item.VID, interfaceId));
+				setTimeout(() => {
+					this.command.write(sprintf("INVOKE %s Object.IsInterfaceSupported %s\n", item.VID, interfaceId));
+				}, 5);
 			});
 		}
 	}
@@ -156,36 +162,13 @@ class VantageInfusion {
 			configuration.on('data', (data) => {
 				buffer = buffer + data.toString().replace("\ufeff", "");
 
-				try {
-					buffer = buffer.replace('<?File Encode="Base64" /', '<File>');
-					buffer = buffer.replace('?>', '</File>');
-
-					if (buffer.includes("</File>")) {
-						console.log("end");
-						var start = buffer.split("<File>")
-						var end = buffer.split("</File>")
-
-						buffer = buffer.match("<File>" + "(.*?)" + "</File>");
-						buffer = buffer[1]
-						var newtext = new Buffer(buffer, 'base64');
-						newtext = newtext.toString()
-						newtext = newtext.replace(/[\r\n]/g, '');
-						var init = newtext.split("<Objects>")
-						newtext = newtext.match("<Objects>" + "(.*?)" + "</Objects>");
-						if (newtext == null) {
-							console.log("null");
-						}
-						xmlResult = new Buffer(init[0] + "<Objects>" + newtext[1] + "</Objects></Project>");
-						xmlResult = xmlResult.toString('base64');
-						buffer = "<smarterHome>" + start[0] + "<File>" + xmlResult + "</File>" + end[end.length - 1] + "</smarterHome>"
-					}
-					libxmljs.parseXml(buffer);
-				} catch (e) {
-					return false;
+				// Reason: TCP data arrives in chunks; only proceed when buffer is valid complete XML
+				if (XMLValidator.validate(buffer) !== true) {
+					return;
 				}
 				if(writeCount < types.length)
 					console.log("parse Json: " + types[writeCount])
-				var parsed = JSON.parse(parser.toJson(buffer));
+				var parsed = xmlParser.parse(buffer);
 				if (parsed.smarterHome !== undefined) {
 					if (parsed.smarterHome.IIntrospection !== undefined) {
 						var interfaces = parsed.smarterHome.IIntrospection.GetInterfaces.return.Interface;
@@ -229,8 +212,7 @@ class VantageInfusion {
 							result["Project"] = {}
 							result["Project"]["Objects"] = {}
 							result["Project"]["Objects"]["Object"] = readObjects
-							var options = { sanitize: true };
-							result = parser.toXml(result, options)
+							result = xmlBuilder.build(result)
 							fs.writeFileSync("/tmp/vantage.dc", result); /* TODO: create a platform-independent temp file */
 							this.emit("endDownloadConfiguration", result);
 							configuration.destroy();
@@ -519,7 +501,7 @@ class VantagePlatform {
 
 		this.infusion.on('endDownloadConfiguration', (configuration) => {
 			this.log.debug("VantagePlatform for InFusion Controller (end configuration download)");
-			var parsed = JSON.parse(parser.toJson(configuration));
+			var parsed = xmlParser.parse(configuration);
 			//this.log("input=    %s",configuration);
 			var dict = {};
 			var Areas = parsed.Project.Objects.Object.filter(function (el) {

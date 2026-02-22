@@ -5,7 +5,7 @@
  * Run: node test-parser.js
  */
 
-var { XMLParser, XMLBuilder } = require('fast-xml-parser');
+var { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 
 var xmlParser = new XMLParser({
 	ignoreAttributes: false,
@@ -118,6 +118,14 @@ var loginXml = '<ILogin><Login><return>true</return></Login></ILogin>';
 var parsed7 = xmlParser.parse(loginXml);
 assert(parsed7.ILogin !== undefined, "ILogin exists");
 assert(parsed7.ILogin.Login.return == "true", "Login.return == 'true' (got: " + parsed7.ILogin.Login.return + ")");
+
+// --- Test 8: XMLValidator rejects incomplete XML (chunked TCP simulation) ---
+console.log("\nTest 8: XMLValidator rejects incomplete XML chunks");
+assert(XMLValidator.validate('<IConfiguration><OpenFilter><re') !== true, "Partial tag rejected");
+assert(XMLValidator.validate('<IConfiguration><GetFilterResults><return><Object><Load><VID>100</VID>') !== true, "Unclosed tags rejected");
+assert(XMLValidator.validate('<IConfiguration><OpenFilter><return>12345</return></OpenFilter></IConfiguration>') === true, "Complete XML accepted");
+assert(XMLValidator.validate('') !== true, "Empty string rejected");
+assert(XMLValidator.validate('<IConfiguration>') !== true, "Single open tag rejected");
 
 // --- Summary ---
 console.log("\n" + "=".repeat(40));

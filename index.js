@@ -1,6 +1,6 @@
 var net = require('net');
 var sprintf = require("sprintf-js").sprintf;
-var { XMLParser, XMLBuilder } = require('fast-xml-parser');
+var { XMLParser, XMLBuilder, XMLValidator } = require('fast-xml-parser');
 var events = require('events');
 var fs = require('fs');
 var Accessory, Characteristic, Service, UUIDGen;
@@ -162,10 +162,9 @@ class VantageInfusion {
 			configuration.on('data', (data) => {
 				buffer = buffer + data.toString().replace("\ufeff", "");
 
-				try {
-					xmlParser.parse(buffer);
-				} catch (e) {
-					return false;
+				// Reason: TCP data arrives in chunks; only proceed when buffer is valid complete XML
+				if (XMLValidator.validate(buffer) !== true) {
+					return;
 				}
 				if(writeCount < types.length)
 					console.log("parse Json: " + types[writeCount])

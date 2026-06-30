@@ -19,7 +19,6 @@
     "forceConsistentCasingInFileNames": true,
   },
   "include": [
-    
     "homebridge-ui",
     "src"
   ]

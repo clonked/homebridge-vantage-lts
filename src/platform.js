@@ -484,7 +484,7 @@ class VantagePlatform {
                     accessory.temperature = parseFloat(value);
                     if (accessory.thermostatService !== undefined) {
                         /* Is it ready? */
-                        accessory.thermostatService.getCharacteristic(Characteristic.CurrentTemperature).value(accessory.temperature);
+                        accessory.thermostatService.getCharacteristic(Characteristic.CurrentTemperature).setValue(accessory.temperature);
                     }
                 }
             }.bind(this));
@@ -498,33 +498,31 @@ class VantagePlatform {
                     if (accessory.thermostatService !== undefined) {
                         /* Is it ready? */
                         //console.log(accessory.thermostatService);
-                        if (targetTemp == -1) {
+                        if (targetTemp === -1) {
                             accessory.mode = mode;
-                            accessory.thermostatService.getCharacteristic(Characteristic.CurrentHeatingCoolingState).value(accessory.mode);
-                        }
-                        else {
-                            if (mode == 1) {
-                                accessory.heating = targetTemp
-                                accessory.thermostatService.getCharacteristic(Characteristic.HeatingThresholdTemperature).value(accessory.heating);
+                            accessory.thermostatService.getCharacteristic(Characteristic.CurrentHeatingCoolingState).setValue(accessory.mode);
+                        } else {
+                            if (mode === 1) {
+                                accessory.heating = targetTemp;
+                                accessory.thermostatService.getCharacteristic(Characteristic.HeatingThresholdTemperature).setValue(accessory.heating);
+                            } else if (mode === 2) {
+                                accessory.cooling = targetTemp;
+                                accessory.thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature).setValue(accessory.cooling);
                             }
-                            else if (mode == 2) {
-                                accessory.cooling = targetTemp
-                                accessory.thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature).value(accessory.cooling);
-                            }
-                            if ((accessory.mode == 1 && mode == 1) || (accessory.mode == 2 && mode == 2)) {
-                                accessory.targetTemp = targetTemp
-                                accessory.thermostatService.getCharacteristic(Characteristic.TargetTemperature).value(accessory.targetTemp);
+                            if ((accessory.mode === 1 && mode === 1) || (accessory.mode === 2 && mode === 2)) {
+                                accessory.targetTemp = targetTemp;
+                                accessory.thermostatService.getCharacteristic(Characteristic.TargetTemperature).setValue(accessory.targetTemp);
                             }
                         }
                     }
                 }
-            }.bind(this));
+            }).bind(this);
         });
 
         this.infusion.on('thermostatDidChange', (value) => {
-            this.items.forEach(function (accessory) {
+            this.items.forEach((accessory) => {
                 //console.log(accessory)
-                if (accessory.type == 'thermostat') {
+                if (accessory.type === 'thermostat') {
                     //console.log(accessory)
                     if (accessory.thermostatService !== undefined) {
                         /* Is it ready? */
@@ -535,22 +533,22 @@ class VantagePlatform {
                         this.infusion.Thermostat_GetCooling(accessory.address);
                     }
                 }
-            }.bind(this));
+            });
         });
 
         this.infusion.on('thermostatIndoorTemperatureChange', (vid, value) => {
-            this.items.forEach(function (accessory) {
+            this.items.forEach((accessory) => {
                 //console.log(accessory)
-                if (accessory.address == vid) {
+                if (accessory.address === vid) {
                     accessory.temperature = parseFloat(value);
                     //console.log(accessory)
                     if (accessory.thermostatService !== undefined) {
                         /* Is it ready? */
                         //console.log(accessory.thermostatService);
-                        accessory.thermostatService.getCharacteristic(Characteristic.CurrentTemperature).value(accessory.temperature);
+                        accessory.thermostatService.getCharacteristic(Characteristic.CurrentTemperature).setValue(accessory.temperature);
                     }
                 }
-            }.bind(this));
+            });
         });
 
         this.infusion.on('endDownloadConfiguration', (configuration) => {

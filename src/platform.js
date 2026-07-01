@@ -8,7 +8,16 @@ import sleep from 'sleep';
 import events from 'events';
 import util from 'util';
 import fs from 'fs';
+import { Buffer } from 'buffer';
 var Accessory, Characteristic, Service, UUIDGen;
+
+if (typeof console === 'undefined') {
+  var console = {
+    log: function() {},
+    warn: function() {},
+    error: function() {}
+  };
+}
 
 export default function (homebridge) {
     Service = homebridge.hap.Service;
@@ -17,9 +26,9 @@ export default function (homebridge) {
     UUIDGen = homebridge.hap.uuid;
 
     inherits(VantageLoad, Accessory);
-    if (typeof process !== 'undefined' && process.setMaxListeners) {
+    /*if (typeof process !== 'undefined' && process.setMaxListeners) {
   		process.setMaxListeners(0);
-    }	
+    }*/	
     homebridge.registerPlatform('homebridge-vantage-lts', 'VantageControls', VantagePlatform);
 };
 
@@ -29,10 +38,10 @@ class VantageInfusion {
         this.ipaddress = ipaddress;
         this.usecache = usecache || true;
         this.accessories = accessories || [];
-        this.omit = omit
-        this.range = range
-        this.username = username
-        this.password = password
+        this.omit = omit;
+        this.range = range;
+        this.username = username;
+        this.password = password;
         this.command = {};
         this.interfaces = {};
         this.StartCommand();
@@ -71,10 +80,10 @@ class VantageInfusion {
                         //console.log("lets get the indoor temp!")
                         this.emit(sprintf('thermostatIndoorTemperatureChange'), parseInt(dataItem[1]), parseFloat(dataItem[2]));
                     }
-                    else if (dataItem[0] === 'S:THERMOP' || dataItem[0] === 'R:GETTHERMOP' || dataItem[0] === 'R:THERMTEMP') 
+                    else if (dataItem[0] === 'S:THERMOP' || dataItem[0] === 'R:GETTHERMOP' || dataItem[0] === 'R:THERMTEMP') {
                         var modeVal = 0;
-                    
-                        
+                    }
+
                       if (dataItem[2] != undefined) {
 
                             if (dataItem[2].includes('OFF')) {
@@ -133,7 +142,7 @@ class VantageInfusion {
     isInterfaceSupported(item, interfaceName) 
     {
         if (this.interfaces[interfaceName] === undefined) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 resolve({ 'item': item, 'interface': interfaceName, 'support': false });
             });
         } else {
@@ -144,7 +153,7 @@ class VantageInfusion {
 			 */
             var interfaceId = this.interfaces[interfaceName];
 
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 this.once(sprintf('isInterfaceSupportedAnswer-%d-%d', parseInt(item.VID), parseInt(interfaceId)), (_support) => {
                     resolve({ 'item': item, 'interface': interfaceName, 'support': _support });
                 }
@@ -203,7 +212,7 @@ class VantageInfusion {
                         buffer = '<smarterHome>' + start[0] + '<File>' + xmlResult + '</File>' + end[end.length - 1] + '</smarterHome>'
                     }
                     libxmljs.parseXml(buffer);
-                } catch (e) {
+                } catch {
                     return false;
                 }
                 if(writeCount < types.length)
@@ -237,8 +246,8 @@ class VantageInfusion {
                     else if (parsed.IConfiguration.GetFilterResults != undefined) {
                         var elements = parsed.IConfiguration.GetFilterResults.return.Object
                         if (elements != undefined) {
-                            for (var i = 0; i < elements.length; i++) {
-                                var element = elements[i][types[writeCount - 1]]
+                            for (var j = 0; j < elements.length; j++) {
+                                var element = elements[j][types[writeCount - 1]]
                                 element['ObjectType'] = types[writeCount - 1]
                                 var elemDict = {};
                                 elemDict[types[writeCount - 1]] = element
@@ -521,7 +530,7 @@ class VantagePlatform {
             }.bind(this));
         });
 
-        this.infusion.on('thermostatDidChange', (value) => {
+        this.infusion.on('thermostatDidChange', () => {
             this.items.forEach(function (accessory) {
                 //console.log(accessory)
                 if (accessory.type == 'thermostat') {
@@ -583,9 +592,9 @@ class VantagePlatform {
                 omit = omit.split(',')
             }
 
-            for (var i = 0; i < parsed.Project.Objects.Object.length; i++) {
-                var thisItemKey = Object.keys(parsed.Project.Objects.Object[i])[0];
-                var thisItem = parsed.Project.Objects.Object[i][thisItemKey];
+            for (var x = 0; x < parsed.Project.Objects.Object.length; x++) {
+                var thisItemKey = Object.keys(parsed.Project.Objects.Object[x])[0];
+                var thisItem = parsed.Project.Objects.Object[x][thisItemKey];
                 if (!omit.includes(thisItem.VID) && (parseInt(thisItem.VID) >= parseInt(range[0])) && (parseInt(thisItem.VID) <= parseInt(range[1])) &&
 					(thisItem.ObjectType == 'Thermostat' || thisItem.ObjectType == 'Load' || thisItem.ObjectType == 'Blind' || thisItem.ObjectType == 'RelayBlind' || thisItem.ObjectType == 'QubeBlind' || thisItem.ObjectType == 'Lutron.Shade_x2F_Blind_Child_CHILD')) {
                     if (thisItem.DeviceCategory == 'HVAC' || thisItem.ObjectType == 'Thermostat') {
@@ -623,10 +632,10 @@ class VantagePlatform {
                         this.pendingrequests = this.pendingrequests + 1;
                         //this.log(sprintf("New load asked (VID=%s, Name=%s, ---)", thisItem.VID, thisItem.Name));
                         //added below
-                        var name = thisItem.Name
-                        name = name.toString()
+                        //var name = thisItem.Name
+                        name = thisItem.Name.toString()
                         if (thisItem.Area !== undefined && thisItem.Area != '') {
-                            var areaVID = thisItem.Area
+                            areaVID = thisItem.Area
                             if (Area[areaVID] !== undefined && Area[areaVID].Name !== undefined && Area[areaVID].Name != '')
                                 {name = Area[areaVID].Name + ' ' + name}
                         }
@@ -661,10 +670,9 @@ class VantagePlatform {
                         if (thisItem.DName !== undefined && thisItem.DName != '' && (typeof thisItem.DName === 'string')) {thisItem.Name = thisItem.DName;}
                         this.pendingrequests = this.pendingrequests + 1;
                         //added below
-                        var name = thisItem.Name
-                        name = name.toString()
+                        name = thisItem.Name.toString()
                         if (thisItem.Area !== undefined && thisItem.Area != '') {
-                            var areaVID = thisItem.Area
+                            areaVID = thisItem.Area
                             if (Area[areaVID] !== undefined && Area[areaVID].Name !== undefined && Area[areaVID].Name != '')
                                 {name = Area[areaVID].Name + ' ' + name}
                         }
@@ -689,10 +697,10 @@ class VantagePlatform {
                     }
                 }
             }
-            for (var i = 0; i < this.items.length; i++) {
-                if (blindItems[this.items[i].address]) {
-                    this.items.splice(i, 1);
-                    i--;
+            for (x = 0; x < this.items.length; x++) {
+                if (blindItems[this.items[x].address]) {
+                    this.items.splice(x, 1);
+                    x--;
                 }
             }
             this.log.warn('VantagePlatform for InFusion Controller (end configuration store)');
@@ -717,7 +725,7 @@ class VantagePlatform {
     }
 
     getDevices() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (!this.ready) {
                 this.log.debug('VantagePlatform for InFusion Controller (wait for getDevices promise)');
                 this.callbackPromesedAccessories = resolve;
@@ -731,7 +739,7 @@ class VantagePlatform {
 
     /* Get accessory list */
     accessories(callback) {      
-        var loadedDevices = this.getDevices().then((devices) => {
+        this.getDevices().then((devices) => {
             this.log.debug('VantagePlatform for InFusion Controller (accessories readed)');
             callback(devices);
         });

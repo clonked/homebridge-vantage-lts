@@ -16,7 +16,7 @@
       "ipaddress": {
         "title": "ipaddress",
         "type": "string",
-        "default": ""
+        "default": "192.168.1.2"
       }
     }
   }

@@ -28,7 +28,7 @@ export default function (homebridge) {
     inherits(VantageLoad, Accessory);
     /*if (typeof process !== 'undefined' && process.setMaxListeners) {
   		process.setMaxListeners(0);
-    }*/	
+    }*/
     homebridge.registerPlatform('homebridge-vantage-lts', 'VantageControls', VantagePlatform);
 };
 
@@ -59,9 +59,11 @@ class VantageInfusion {
                 /* Data received */
                 //console.log('data received', data);
                 var lines = data.toString().split('\n');
+                console.log(lines);
                 for (var i = 0; i < lines.length; i++) {
 
                     var dataItem = lines[i].split(' ');
+
                     //console.log(dataItem);
                     if (lines[i].startsWith('S:BLIND') || lines[i].startsWith('R:GETBLIND')) {
                         /* Live update about load level (even if it's a RGB load') */
@@ -883,11 +885,12 @@ class VantageLoad {
             this.type = 'fan';
         } else {
             this.lightBulbService = new Service.Lightbulb(this.name);
+            this.lightBulbService.getCharacteristic(Characteristic.Brightness)
+            .setProps({ minValue: 0, maxValue: 100, minStep: 5 });
         }
 
         if (this.type == 'fan')
         {
-
             this.lightBulbService.getCharacteristic(Characteristic.RotationSpeed)
                 .on('set', (level, callback) => {						
                     this.bri = parseInt(level);

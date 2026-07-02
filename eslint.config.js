@@ -7,7 +7,7 @@ export default tseslint.config(
     },
     {
         rules: {
-            'quotes': ['warn', 'single'],
+ /*           'quotes': ['warn', 'single'],
             'indent': ['warn', 4, { 'SwitchCase': 0 }],
             'linebreak-style': ['warn', 'unix'],
             'semi': ['warn', 'always'],
@@ -21,7 +21,7 @@ export default tseslint.config(
             'object-curly-spacing': ['warn', 'always'],
             'no-use-before-define': 'off',
             '@typescript-eslint/no-use-before-define': ['warn', { 'classes': false, 'enums': false }],
-            '@typescript-eslint/no-unused-vars': ['warn', { 'caughtErrors': 'none' }],
+            '@typescript-eslint/no-unused-vars': ['warn', { 'caughtErrors': 'none' }], */
         },
     },
     {

@@ -8,7 +8,6 @@ import { Buffer } from 'buffer';
 import { sprintf } from 'sprintf-js';
 import parser from 'xml2json';
 
-// eslint-disable-next-line @typescript-eslint/no-use-before-define
 if (typeof console === 'undefined') {
     var console = {
         log: function() {},

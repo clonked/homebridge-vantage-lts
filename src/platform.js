@@ -12,6 +12,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
 export var Accessory, Characteristic, Service, UUIDGen;
 
+// eslint-disable-next-line @typescript-eslint/no-use-before-define
 if (typeof console === 'undefined') {
     var console = {
         log: function() {},

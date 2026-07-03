@@ -1,50 +1,54 @@
 {
   "name": "homebridge-vantage-lts",
-  "version": "0.2.0",
-  "description": "Vantage support for homebridge. Focused on long term support for modern node.",
-  "type": "module",
+  "version": "0.3.1",
+  "description": "Homebridge plugin for Vantage InFusion",
   "license": "MIT",
-    "keywords": [
-    "homebridge-plugin"
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "vantage",
+    "infusion",
+    "lighting",
+    "hvac",
+    "shades"
   ],
-  "main": "dist/index.js",
-  "engines": {
-    "node": ">=22.0.0",
-    "homebridge": ">=2.0.0"
-  },
-  "author": {
-    "name": "Nathan Anderson"
-  },
+  "homepage": "https://github.com/SmarterHomeApp/homebridge-vantage",
   "repository": {
     "type": "git",
-    "url": "https://github.com/clonked/homebridge-vantage"
+    "url": "git+https://github.com/SmarterHomeApp/homebridge-vantage.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SmarterHomeApp/homebridge-vantage/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "config.schema.json"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "homebridge": ">=1.6.0 <3.0.0"
   },
   "scripts": {
-    "build": "rimraf ./dist && tsc",
-    "lint": "eslint . --max-warnings=0",
-    "prepublishOnly": "npm run lint && npm run build",
-    "watch": "npm run build && npm link && nodemon"
+    "clean": "rimraf dist",
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -w -p tsconfig.json",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@eslint/js": "^8.57.0 || ^9.0.0",
-    "@types/node": "^25.6.0",
-    "eslint": "^10.3.0",
-
-    "nodemon": "^3.1.14",
-    "rimraf": "^6.1.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2",
-
-    "homebridge-lib": "^8.0.1",
-    "net": "latest",
-    "sprintf-js": "latest",
-    "xml2json": "latest",
-    "libxmljs2": "latest",
-    "wait-until": "latest",
-    "promise": "latest",
-    "debug": "latest",
-    "inherits": "latest",
-    "sleep": "latest"
+    "sprintf-js": "^1.1.3",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/xml2js": "^0.4.14",
+    "homebridge": "^1.11.0",
+    "typescript": "^5.5.4",
+    "eslint": "^9.12.0",
+    "@types/node": "^20.19.11",
+    "rimraf": "^6.0.1"
   }
 }

@@ -1,23 +1,84 @@
 {
   "pluginAlias": "VantageControls",
   "pluginType": "platform",
-  "singular": true,
-  "strictValidation": false,
+
+  "headerDisplay": "## Vantage Controls\nConfigure your Vantage InFusion controller.",
+
   "schema": {
     "type": "object",
-    "required": ["name"],
-    "additionalProperties": false,
     "properties": {
       "name": {
         "title": "Name",
         "type": "string",
-        "default": "Vantage Controls"
+        "default": "VantageControls",
+        "description": "A label for this platform entry."
       },
       "ipaddress": {
-        "title": "ipaddress",
+        "title": "Controller IP",
         "type": "string",
-        "default": "192.168.1.2"
+        "format": "ipv4",
+        "placeholder": "192.168.1.50",
+        "description": "IP address of your Vantage InFusion controller."
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "placeholder": "optional",
+        "description": "Only needed if your controller requires login."
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "format": "password",
+        "placeholder": "optional",
+        "description": "Only needed if your controller requires login."
+      },
+      "forceSSL": {
+        "title": "Force SSL",
+        "type": "boolean",
+        "default": false,
+        "description": "Skip insecure ports and use 3010/2010 directly."
+      },
+      "usecache": {
+        "title": "Use Local Cache",
+        "type": "boolean",
+        "default": true,
+        "description": "Use previously downloaded configuration (if present) to speed up startup."
+      },
+      "omit": {
+        "title": "Omit VIDs",
+        "type": "string",
+        "placeholder": "123,456,789",
+        "description": "Comma-separated list of Vantage object VIDs to skip."
+      },
+      "range": {
+        "title": "VID Range",
+        "type": "string",
+        "default": "0,999999999",
+        "placeholder": "0,999999999",
+        "description": "Include only VIDs within this inclusive range, e.g. 0,5000. If you have more than 140 loads, add 2 instances of the vantage platform with different ranges."
       }
+    },
+    "required": ["name", "ipaddress"],
+    "additionalProperties": false
+  },
+
+  "layout": [
+    "name",
+    "ipaddress",
+    {
+      "type": "flex",
+      "flex-flow": "row wrap",
+      "items": ["username", "password"]
+    },
+    "forceSSL",
+    "usecache",
+    {
+      "type": "fieldset",
+      "title": "Advanced",
+      "expandable": true,
+      "expanded": false,
+      "items": ["omit", "range"]
     }
-  }
+  ]
 }

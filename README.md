@@ -1,63 +1,131 @@
-# VantagePlugin
-VantageControls InFusion plugin for homebridge: https://github.com/nfarina/homebridge
+# Homebridge Vantage Controls
+[![verified-by-homebridge](https://img.shields.io/badge/homebridge-verified-blueviolet?color=%23491F59&style=flat)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 
-VantageControls (http://www.vantagecontrols.com/) InFusion is an High End solution that can manage:
-- lighting (standard on/off/dimmed lights and RGB solutions using DMX, DALI or wireless bulb like Hue or LiFX)
-- thermoregulation (with own or third party thermostats and HVAC systems)
-- curtains, doors (third party)
-- A/V systems (own and third party)
-- security systems (third party)
-- Weather stations
+A [Homebridge](https://homebridge.io/) plugin for Vantage Controls InFusion system. 
+This plugin replaces the one sold on smarterhome.io allowing anyone to download on the platform of their choice.
 
-With this plugin you will control all systems that is already connected to Vantage without additional 
-support from the manufacturer of the connected device, for example you can control an AC system without the 
-HomeKit support of the specific vendor because you are already control it via InFusion's Driver that count up to 18000 
-supported devices.
+## Features
 
+- **Lighting Control**: Supports dimmers, RGB lights, and relays
+- **Thermostat Control**: Full HVAC control with heating/cooling modes
+- **Blind Control**: Window covering automation
+- **Real-time Updates**: Live status updates from your InFusion controller
+- **SSL Support**: Secure connections to your controller
+- **Device Filtering**: Include/exclude specific devices by VID range
 
-# Installation
-Install plugin with npm install -g homebridge-vantage
-Add platform within config.json of you homebridge instance:
+## Installation
 
+1. Install Homebridge:
+```bash
+npm install -g homebridge
+```
+
+2. Install this plugin:
+```bash
+npm install -g homebridge-vantage-lts
+```
+
+3. Add the platform to your `config.json`:
+```json
+{
+  "platforms": [
     {
-        "platforms": [{
-            "platform": "VantageControls",
-            "ipaddress": "192.168.1.1"
-            }], 
-        "bridge": {
-            "username": "CC:22:3D:E3:CE:31", 
-            "name": "Vantage HomeBridge Adapter", 
-            "pin": "342-52-220", 
-            "port": 51826
-        }, 
-        "description": "My Fantastic Vantage System", 
-        "accessories": []
+      "platform": "VantageControls",
+      "name": "Vantage Controls",
+      "ipaddress": "192.168.1.100",
+      "username": "your_username",
+      "password": "your_password",
+      "usecache": true,
+      "omit": "1234,5678",
+      "range": "1000,2000"
     }
-
-Restart homebridge
-Enjoy!
-
-# Supported Devices
-
-Currently it should be possible to control all loads registered on you InFusion device, but I'm working on the detection of the difference with Relay, Dimmer and RGB Loads; I'm ready to support Thermostats and other devices but I prefer to keep the program stable before publish further functionalities. My test plan consists of:
-- RGB Philips Hue lights and Osram Lightify (controlled by Vantage, my Hue Bridge is not compatible with HomeKit and I'm happy of this)
-- LiFX (controlled by Vantage)
-- Legrand/BTicino MyHome Relay and Dimmer
-- Legrand/BTicino MyHome Thermostat
-- Youus DMX Driver
-
-Stay tuned!
+  ]
+}
+```
 
 ## Configuration
 
-All supported items will automatically added to the HomeBridge device inventory; use the "Exclude from Widgets" and "Display Name" property to remove some devices or change the displayed name. 
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `platform` | string | Yes | Must be "VantageControls" |
+| `name` | string | Yes | Display name for the platform |
+| `ipaddress` | string | Yes | IP address of your InFusion controller |
+| `username` | string | No | Username for authentication |
+| `password` | string | No | Password for authentication |
+| `usecache` | boolean | No | Use cached configuration (default: true) |
+| `omit` | string | No | Comma-separated list of VIDs to exclude |
+| `range` | string | No | Comma-separated VID range (min,max) |
 
-# TODOS
+## Supported Devices
 
-- manage multiple feedbacks coming from the InFusion Controller when multiple values are sent from HomeKit
-- test with standard Relay/Dimmer devices (...ehm...)
+### Lighting
+- **Dimmers**: Variable brightness control
+- **RGB Lights**: Full color control with HSL values
+- **Relays**: On/off switches for non-dimmable loads
 
-# Disclaimer
+### HVAC
+- **Thermostats**: Temperature control with heating/cooling modes
+- **Auto Mode**: Automatic temperature regulation
+- **Temperature Units**: Celsius/Fahrenheit support
 
-I'm furnishing this software "as is". I do not provide any warranty of the item whatsoever, whether express, implied, or statutory, including, but not limited to, any warranty of merchantability or fitness for a particular purpose or any warranty that the contents of the item will be error-free.
-The development of this module is not supported by Vantage Controls or Apple. These vendors and me are not responsible for direct, indirect, incidental or consequential damages resulting from any defect, error or failure to perform.  
+### Window Coverings
+- **Blinds**: Position control (0-100%)
+- **Shades**: Motorized window coverings
+
+## Development
+
+1. Clone the repository:
+```bash
+git clone https://github.com/smarterhomeapp/homebridge-vantage.git
+cd homebridge-vantage
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Build the project:
+```bash
+npm run build
+```
+
+4. Link for development:
+```bash
+npm run dev
+```
+
+## Troubleshooting
+
+### Connection Issues
+- Verify the IP address is correct
+- Check if SSL is required (ports 3010/2010 vs 3001/2001)
+- Ensure username/password are correct if authentication is enabled
+
+### Device Not Appearing
+- Check the `omit` and `range` parameters
+- Verify the device VID is within the specified range
+- Check Homebridge logs for discovery errors
+
+### Performance Issues
+- Reduce the number of devices by using the `omit` parameter
+- Disable cache if configuration changes frequently
+- Consider using device ranges to limit discovery
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## Support
+
+For issues and questions:
+- [GitHub Issues](https://github.com/smarterhomeapp/homebridge-vantage/issues)
+- [Homebridge Community](https://github.com/homebridge/homebridge) 

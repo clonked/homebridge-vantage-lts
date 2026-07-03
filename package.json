@@ -1,6 +1,6 @@
 {
   "name": "homebridge-vantage-lts",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "Vantage support for homebridge. Focused on long term support for modern node.",
   "type": "module",
   "license": "MIT",
